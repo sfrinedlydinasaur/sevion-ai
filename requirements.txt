@@ -1,0 +1,6 @@
+Flask
+flask_sqlalchemy
+python-dotenv
+openai
+PyPDF2
+gunicorn
