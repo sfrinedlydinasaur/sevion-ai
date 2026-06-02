@@ -23,11 +23,13 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey123")
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///instance/sevion.db"
+
+# Fixed database path for Render
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///sevion.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
 app.config["UPLOAD_FOLDER"] = "uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-os.makedirs("instance", exist_ok=True)
 
 db = SQLAlchemy(app)
 
@@ -41,10 +43,9 @@ You are Sevion, a disciplined, intelligent, and helpful AI assistant.
 
 Capabilities:
 - You can read and analyze uploaded files (PDF, TXT, CSV)
-- You can see and understand uploaded images
+- You can see and understand uploaded images (when user uploads them)
 
-Limits:
-- You can only use uploaded files/images when the user provides them
+Be honest about your limits. Only use uploaded content when the user provides it.
 """
 
 
@@ -95,7 +96,7 @@ def register():
         hashed = generate_password_hash(password)
         db.session.add(User(email=email, password=hashed))
         db.session.commit()
-        flash("Account created!", "success")
+        flash("Account created successfully!", "success")
         return redirect(url_for("login_page"))
     return render_template("register.html")
 
@@ -108,7 +109,7 @@ def login():
     if user and check_password_hash(user.password, password):
         session["user_id"] = user.id
         return redirect(url_for("chat_page"))
-    flash("Invalid credentials", "error")
+    flash("Invalid email or password", "error")
     return redirect(url_for("login_page"))
 
 
@@ -126,7 +127,7 @@ def chat_page():
     return render_template("index.html", current_user=user)
 
 
-# ====================== CHAT + FILE HANDLING ======================
+# ====================== CHAT + FILE/IMAGE HANDLING ======================
 
 
 @app.route("/chat", methods=["POST"])
@@ -146,11 +147,12 @@ def chat():
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         uploaded_file.save(filepath)
 
+        # IMAGE VISION
         if filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
-            with open(filepath, "rb") as f:
-                base64_image = base64.b64encode(f.read()).decode("utf-8")
+            with open(filepath, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode("utf-8")
 
-            vision = client.chat.completions.create(
+            vision_response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {
@@ -158,7 +160,8 @@ def chat():
                         "content": [
                             {
                                 "type": "text",
-                                "text": user_message or "Describe this image.",
+                                "text": user_message
+                                or "Describe this image in detail.",
                             },
                             {
                                 "type": "image_url",
@@ -171,7 +174,7 @@ def chat():
                 ],
                 max_tokens=600,
             )
-            ai_reply = vision.choices[0].message.content
+            ai_reply = vision_response.choices[0].message.content
 
             if not conv_id:
                 conv_id = str(uuid.uuid4())
@@ -179,7 +182,9 @@ def chat():
 
             conv = Conversation.query.get(conv_id)
             messages = json.loads(conv.messages) if conv.messages else []
-            messages.append({"role": "user", "content": f"[Image: {filename}]"})
+            messages.append(
+                {"role": "user", "content": f"[Uploaded image: {filename}]"}
+            )
             messages.append({"role": "assistant", "content": ai_reply})
             conv.messages = json.dumps(messages)
             conv.last_updated = datetime.utcnow()
@@ -187,21 +192,32 @@ def chat():
 
             return jsonify({"reply": ai_reply, "conversation_id": conv_id})
 
+        # FILE TEXT EXTRACTION
         else:
-            text = ""
+            file_text = ""
             if filename.lower().endswith((".txt", ".csv")):
                 with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                    text = f.read()
+                    file_text = f.read()
             elif filename.lower().endswith(".pdf"):
-                import PyPDF2
+                try:
+                    import PyPDF2
 
-                with open(filepath, "rb") as f:
-                    for page in PyPDF2.PdfReader(f).pages:
-                        text += page.extract_text() or ""
-            file_content = f"\n\n[File Content - {filename}]\n{text}\n[End of File]"
+                    with open(filepath, "rb") as f:
+                        for page in PyPDF2.PdfReader(f).pages:
+                            file_text += page.extract_text() or ""
+                except:
+                    file_text = "[Could not read PDF file]"
+            else:
+                file_text = (
+                    "[Unsupported file type. Only PDF, TXT, and CSV are supported.]"
+                )
+
+            file_content = (
+                f"\n\n[File Content - {filename}]\n{file_text}\n[End of File]"
+            )
 
     if not user_message and not file_content:
-        return jsonify({"reply": "Please type something or upload a file."})
+        return jsonify({"reply": "Please type a message or upload a file."})
 
     full_message = user_message + file_content
 
@@ -226,14 +242,17 @@ def chat():
         )
         ai_reply = response.choices[0].message.content
     except Exception as e:
-        if "token" in str(e).lower() or "context" in str(e).lower():
+        error_msg = str(e).lower()
+        if "token" in error_msg or "context" in error_msg:
             return jsonify(
                 {
                     "error": "token_limit",
-                    "message": "Conversation too long. Please start a new chat.",
+                    "message": "This conversation is too long. Please start a new chat.",
                 }
             ), 400
-        return jsonify({"error": "api_error"}), 400
+        return jsonify(
+            {"error": "api_error", "message": "Sorry, something went wrong."}
+        ), 400
 
     messages.append({"role": "assistant", "content": ai_reply})
     conv.messages = json.dumps(messages)
