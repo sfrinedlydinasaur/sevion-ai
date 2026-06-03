@@ -9,78 +9,73 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #040814;
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #040814; }
+        .frozen-3d-ball {
+            position: relative; width: 40px; height: 40px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6) 0%, transparent 40%),
+                        radial-gradient(circle at 75% 75%, rgba(0,136,255,0.6) 0%, transparent 60%),
+                        radial-gradient(circle at 50% 50%, #00f0ff 0%, #0044ff 60%, #020617 100%);
+            box-shadow: 0 0 20px rgba(0,240,255,0.4), inset -5px -5px 15px rgba(0,136,255,0.7), inset 5px 5px 10px rgba(255,255,255,0.4);
         }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.2); border-radius: 99px; }
-
-        .frozen-3d-ball { /* same as before */ }
-        #typingIndicator { display: none; align-items: center; gap: 8px; padding: 12px 20px; background: rgba(15, 23, 42, 0.8); border-radius: 9999px; width: fit-content; margin: 12px 0; color: #94a3b8; }
     </style>
 </head>
 <body class="h-full text-slate-200 overflow-hidden flex">
 
     <div class="aurora-ambient-glow"></div>
 
-    <button id="mobileMenuBtn" class="md:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20 text-slate-400 hover:text-cyan-400 backdrop-blur-md transition-colors">
+    <button id="mobileMenuBtn" class="md:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20 text-slate-400 hover:text-cyan-400">
         <i data-lucide="menu" class="w-5 h-5"></i>
     </button>
 
-    <aside id="sidebar" class="w-72 bg-[#060c1d] border-r border-cyan-500/10 flex flex-col p-5 z-40 shrink-0 duration-300 absolute md:relative h-full -translate-x-full md:translate-x-0">
-        <!-- Logo -->
-        <div class="flex items-center justify-between h-12 mb-8 center-on-collapse">
-            <div class="logo-container flex items-center gap-3">
+    <aside id="sidebar" class="w-72 bg-[#060c1d] border-r border-cyan-500/10 flex flex-col p-5 z-40 shrink-0 fixed md:relative h-full -translate-x-full md:translate-x-0 transition-all duration-300">
+        <div class="flex items-center justify-between h-12 mb-8">
+            <div class="flex items-center gap-3">
                 <div class="frozen-3d-ball"></div>
-                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent hide-on-collapse">Sevion</span>
+                <span class="text-2xl font-bold hide-on-collapse">Sevion</span>
             </div>
-            <button id="collapseBtn" class="hide-on-collapse p-2 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5 transition-all">
+            <button id="collapseBtn" class="p-2 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5 transition-all hide-on-collapse">
                 <i data-lucide="chevrons-left" class="w-4 h-4"></i>
             </button>
-            <button id="uncollapseBtn" class="hidden p-2 mx-auto rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5 transition-all">
+            <button id="expandBtn" class="hidden p-2 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5 transition-all">
                 <i data-lucide="chevrons-right" class="w-4 h-4"></i>
             </button>
         </div>
 
-        <button id="newChatBtn" class="flex items-center justify-center gap-2.5 bg-gradient-to-r from-blue-600/10 to-cyan-500/10 border border-cyan-500/20 hover:border-cyan-400/50 text-slate-200 py-3 px-4 rounded-xl font-medium transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,240,255,0.15)] mb-6 center-on-collapse w-full">
+        <button id="newChatBtn" class="flex items-center justify-center gap-2.5 bg-gradient-to-r from-blue-600/10 to-cyan-500/10 border border-cyan-500/20 hover:border-cyan-400/50 text-slate-200 py-3 px-4 rounded-xl font-medium mb-6">
             <i data-lucide="plus" class="w-4 h-4 text-cyan-400"></i>
-            <span class="text-sm hide-on-collapse">New Chat</span>
+            <span class="hide-on-collapse">New Chat</span>
         </button>
 
         <div class="flex-1 overflow-y-auto pr-1" id="conversationList">
             <div class="text-xs font-semibold tracking-wider text-slate-600 uppercase mb-3 px-3 hide-on-collapse">Recent Chats</div>
         </div>
 
-        <!-- User Info -->
-        <div class="pt-4 border-t border-cyan-500/5 flex items-center justify-between center-on-collapse">
+        <div class="pt-4 border-t border-cyan-500/5 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-slate-800 border border-cyan-500/20 flex items-center justify-center text-xs font-bold text-cyan-400 shrink-0">
+                <div class="w-8 h-8 rounded-full bg-slate-800 border border-cyan-500/20 flex items-center justify-center text-xs font-bold text-cyan-400">
                     {{ current_user.email[0].upper() }}
                 </div>
-                <div class="hide-on-collapse min-w-0">
-                    <p class="text-xs font-semibold text-slate-300 truncate">{{ current_user.email }}</p>
-                    <p class="text-[10px] text-slate-500 truncate">Free Plan</p>
+                <div class="hide-on-collapse">
+                    <p class="text-xs font-semibold text-slate-300">{{ current_user.email }}</p>
+                    <p class="text-[10px] text-slate-500">Free Plan</p>
                 </div>
             </div>
-            <a href="/logout" class="hide-on-collapse text-slate-500 hover:text-red-400 transition-colors">
+            <a href="/logout" class="text-slate-500 hover:text-red-400">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
             </a>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative bg-aurora-glow h-full min-w-0">
-        <div id="welcomeContainer" class="flex-1 flex items-center justify-center px-4 z-10 transition-all duration-500">
+    <main class="flex-1 flex flex-col relative">
+        <div id="welcomeContainer" class="flex-1 flex items-center justify-center px-4">
             <div class="animate-float max-w-lg w-full bg-slate-900/40 border border-cyan-500/15 backdrop-blur-2xl p-10 rounded-3xl text-center shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_50px_rgba(0,240,255,0.03)]">
                 <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Good afternoon</h1>
                 <p class="text-sm md:text-base text-cyan-400/90 font-medium tracking-wide drop-shadow-[0_0_12px_rgba(0,240,255,0.3)]">What are we working on today?</p>
             </div>
         </div>
 
-        <div id="chatView" class="hidden flex-1 overflow-y-auto px-4 md:px-8 pt-24 pb-8 space-y-6 max-w-4xl w-full mx-auto">
-        </div>
+        <div id="chatView" class="hidden flex-1 overflow-y-auto px-4 md:px-8 pt-24 pb-8 space-y-6 max-w-4xl w-full mx-auto"></div>
 
         <div id="typingIndicator" class="hidden mx-4 md:mx-8 mb-4">
             <div class="flex items-center gap-3 bg-slate-900/70 px-5 py-3 rounded-2xl">
@@ -90,29 +85,30 @@
         </div>
 
         <div class="p-4 md:p-8 max-w-3xl w-full mx-auto z-20 relative">
-            <div class="bg-slate-950/60 border border-cyan-500/15 focus-within:border-cyan-400/50 rounded-2xl p-3 flex items-end gap-3 backdrop-blur-3xl shadow-[0_15px_40px_rgba(0,0,0,0.4),0_0_30px_rgba(0,240,255,0.02)] transition-all duration-300">
-                <label class="p-2.5 rounded-xl text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5 transition-all shrink-0 cursor-pointer">
+            <div class="bg-slate-950/60 border border-cyan-500/15 focus-within:border-cyan-400/50 rounded-2xl p-3 flex items-end gap-3 backdrop-blur-3xl shadow-[0_15px_40px_rgba(0,0,0,0.4),0_0_30px_rgba(0,240,255,0.02)] transition-all">
+                <label class="p-2.5 rounded-xl text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5 cursor-pointer">
                     <i data-lucide="paperclip" class="w-5 h-5"></i>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf,.txt,.csv,.png,.jpg,.jpeg,.webp">
                 </label>
-
                 <div class="flex-1">
                     <div id="filePreview" class="hidden mb-2 text-xs bg-slate-900 px-3 py-1 rounded-lg flex items-center gap-2 w-fit">
                         <span id="fileName" class="text-cyan-400"></span>
                         <button type="button" onclick="removeSelectedFile()" class="text-red-400 hover:text-red-500">×</button>
                     </div>
-                    <textarea id="chatInput" rows="1" placeholder="Message Sevion..." class="w-full bg-transparent border-0 outline-none focus:ring-0 text-slate-200 placeholder-slate-500 text-base resize-none py-2 max-h-40 min-h-[24px] overflow-y-auto"></textarea>
+                    <textarea id="chatInput" rows="1" placeholder="Message Sevion..." class="w-full bg-transparent border-0 outline-none focus:ring-0 text-slate-200 placeholder-slate-500 text-base resize-none py-2 max-h-40"></textarea>
                 </div>
-
-                <button id="sendBtn" class="p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-[0_0_15px_#00f0ff] text-slate-950 flex items-center justify-center transition-all duration-300 disabled:opacity-40 shrink-0">
+                <button id="sendBtn" class="p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-[0_0_15px_#00f0ff] text-slate-950 flex items-center justify-center transition-all">
                     <i data-lucide="arrow-up" class="w-5 h-5 stroke-[2.5]"></i>
                 </button>
             </div>
         </div>
     </main>
 
-    <!-- Context Menu & Delete Modal -->
-    <div id="contextMenu" class="hidden bg-[#111827] border border-slate-700 rounded-xl shadow-2xl py-1 text-sm min-w-[180px]">
+    <div id="contextMenu" class="hidden fixed bg-[#111827] border border-slate-700 rounded-xl shadow-2xl py-1 text-sm min-w-[180px] z-[999]">
+        <button id="renameBtn" class="w-full px-4 py-3 text-left hover:bg-slate-700 flex items-center gap-3 rounded-xl">
+            <i data-lucide="edit-2" class="w-4 h-4"></i>
+            <span>Rename</span>
+        </button>
         <button id="deleteBtn" class="w-full px-4 py-3 text-left hover:bg-red-500/10 text-red-400 flex items-center gap-3 rounded-xl">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
             <span>Delete Conversation</span>
@@ -129,8 +125,8 @@
             </div>
             <p class="text-slate-400 text-sm mb-6">This action cannot be undone.</p>
             <div class="flex gap-3">
-                <button id="cancelDeleteBtn" class="flex-1 py-2.5 rounded-xl border border-slate-600 hover:bg-slate-800 transition-colors">Cancel</button>
-                <button id="confirmDeleteBtn" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 transition-colors text-white">Delete</button>
+                <button id="cancelDeleteBtn" class="flex-1 py-2.5 rounded-xl border border-slate-600 hover:bg-slate-800">Cancel</button>
+                <button id="confirmDeleteBtn" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white">Delete</button>
             </div>
         </div>
     </div>
@@ -138,21 +134,31 @@
     <script>
         lucide.createIcons();
 
-        // Variables
-        let isChatActive = false;
         let currentConversationId = null;
         let conversationToDelete = null;
         let selectedFile = null;
 
-        const chatView = document.getElementById('chatView');
-        const welcomeContainer = document.getElementById('welcomeContainer');
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const newChatBtn = document.getElementById('newChatBtn');
-        const conversationList = document.getElementById('conversationList');
-        const typingIndicator = document.getElementById('typingIndicator');
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const collapseBtn = document.getElementById('collapseBtn');
+        const expandBtn = document.getElementById('expandBtn');
 
-        // File Upload (same as before)
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        collapseBtn.addEventListener('click', () => {
+            sidebar.classList.add('sidebar-collapsed');
+            collapseBtn.classList.add('hidden');
+            expandBtn.classList.remove('hidden');
+        });
+
+        expandBtn.addEventListener('click', () => {
+            sidebar.classList.remove('sidebar-collapsed');
+            expandBtn.classList.add('hidden');
+            collapseBtn.classList.remove('hidden');
+        });
+
         const fileInput = document.getElementById('fileInput');
         const filePreview = document.getElementById('filePreview');
         const fileNameSpan = document.getElementById('fileName');
@@ -172,15 +178,12 @@
         }
 
         function appendMessage(sender, text) {
-            if (!isChatActive) {
-                welcomeContainer.classList.add('hidden');
-                chatView.classList.remove('hidden');
-                isChatActive = true;
-            }
-
+            const welcomeContainer = document.getElementById('welcomeContainer');
+            const chatView = document.getElementById('chatView');
+            welcomeContainer.classList.add('hidden');
+            chatView.classList.remove('hidden');
             const wrapper = document.createElement('div');
             wrapper.classList.add('w-full', 'flex', sender === 'user' ? 'justify-end' : 'justify-start');
-
             const bubble = document.createElement('div');
             if (sender === 'user') {
                 bubble.className = "max-w-[75%] bg-gradient-to-br from-blue-600 to-cyan-500 text-white rounded-2xl rounded-br-sm py-3 px-4";
@@ -193,38 +196,32 @@
             chatView.scrollTop = chatView.scrollHeight;
         }
 
-        async function sendMessage() {
-            const text = chatInput.value.trim();
-            if (!text && !selectedFile) return;
-
-            if (selectedFile) appendMessage('user', `[Uploaded: ${selectedFile.name}]`);
-            if (text) appendMessage('user', text);
-
-            const formData = new FormData();
-            formData.append("message", text);
-            if (currentConversationId) formData.append("conversation_id", currentConversationId);
-            if (selectedFile) formData.append("file", selectedFile);
-
-            chatInput.value = '';
-            removeSelectedFile();
-            typingIndicator.style.display = 'flex';
-
+        async function loadConversation(convId) {
             try {
-                const response = await fetch('/chat', { method: 'POST', body: formData });
-                const data = await response.json();
-
-                typingIndicator.style.display = 'none';
+                const res = await fetch(`/conversation/${convId}`);
+                const data = await res.json();
 
                 if (data.error) {
-                    appendMessage('bot', data.message || "Sorry, something went wrong.");
-                } else {
-                    appendMessage('bot', data.reply);
-                    if (data.conversation_id) currentConversationId = data.conversation_id;
-                    loadConversations();
+                    console.error(data.error);
+                    return;
                 }
-            } catch (err) {
-                typingIndicator.style.display = 'none';
-                appendMessage('bot', "Sorry, I'm having trouble responding right now.");
+
+                currentConversationId = convId;
+                const chatView = document.getElementById('chatView');
+                const welcomeContainer = document.getElementById('welcomeContainer');
+
+                chatView.innerHTML = '';
+                welcomeContainer.classList.add('hidden');
+                chatView.classList.remove('hidden');
+
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        if (msg.role === 'user') appendMessage('user', msg.content);
+                        if (msg.role === 'assistant') appendMessage('bot', msg.content);
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to load conversation");
             }
         }
 
@@ -232,31 +229,125 @@
             try {
                 const res = await fetch('/conversations');
                 const convs = await res.json();
-
+                const conversationList = document.getElementById('conversationList');
                 conversationList.innerHTML = `<div class="text-xs font-semibold tracking-wider text-slate-600 uppercase mb-3 px-3 hide-on-collapse">Recent Chats</div>`;
-
-                if (convs.length === 0) {
-                    conversationList.innerHTML += `<div class="px-3 py-2 text-xs text-slate-500 hide-on-collapse">No conversations yet</div>`;
-                    return;
-                }
 
                 convs.forEach(conv => {
                     const div = document.createElement('div');
-                    div.className = `conversation-item flex items-center gap-3 p-3 rounded-xl hover:bg-slate-900/30 text-slate-200 cursor-pointer ${conv.id === currentConversationId ? 'active' : ''}`;
+                    div.className = `conversation-item flex items-center gap-3 p-3 rounded-xl hover:bg-slate-900/30 text-slate-200 cursor-pointer`;
                     div.innerHTML = `
                         <i data-lucide="message-square" class="w-4 h-4 text-cyan-500"></i>
                         <span class="text-sm truncate hide-on-collapse">${conv.title}</span>
                     `;
+
+                    div.oncontextmenu = (e) => {
+                        e.preventDefault();
+                        conversationToDelete = conv.id;
+                        const contextMenu = document.getElementById('contextMenu');
+                        contextMenu.style.left = (e.clientX + 10) + 'px';
+                        contextMenu.style.top = (e.clientY - 30) + 'px';
+                        contextMenu.style.display = 'block';
+                    };
+
                     div.onclick = () => loadConversation(conv.id);
                     conversationList.appendChild(div);
                 });
                 lucide.createIcons();
+            } catch (e) {}
+        }
+
+        document.getElementById('renameBtn').onclick = async () => {
+            document.getElementById('contextMenu').style.display = 'none';
+            if (!conversationToDelete) return;
+
+            const newTitle = prompt("Enter new name:");
+            if (!newTitle) return;
+
+            try {
+                await fetch(`/conversation/${conversationToDelete}/rename`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle })
+                });
+                loadConversations();
             } catch (e) {
-                console.error("Failed to load conversations");
+                alert("Rename failed");
+            }
+        };
+
+        document.getElementById('deleteBtn').onclick = async () => {
+            document.getElementById('contextMenu').style.display = 'none';
+            document.getElementById('deleteModal').classList.remove('hidden');
+        };
+
+        document.getElementById('confirmDeleteBtn').onclick = async () => {
+            if (!conversationToDelete) return;
+            try {
+                await fetch(`/conversation/${conversationToDelete}`, { method: 'DELETE' });
+                document.getElementById('deleteModal').classList.add('hidden');
+                conversationToDelete = null;
+                loadConversations();
+                if (currentConversationId === conversationToDelete) {
+                    document.getElementById('chatView').innerHTML = '';
+                    document.getElementById('welcomeContainer').classList.remove('hidden');
+                    currentConversationId = null;
+                }
+            } catch (e) {
+                alert("Delete failed");
+            }
+        };
+
+        document.getElementById('cancelDeleteBtn').onclick = () => {
+            document.getElementById('deleteModal').classList.add('hidden');
+            conversationToDelete = null;
+        };
+
+        document.addEventListener('click', () => {
+            document.getElementById('contextMenu').style.display = 'none';
+        });
+
+        async function sendMessage() {
+            const text = document.getElementById('chatInput').value.trim();
+            if (!text && !selectedFile) return;
+
+            appendMessage('user', selectedFile ? `[Uploaded: ${selectedFile.name}]` : text);
+
+            const formData = new FormData();
+            formData.append("message", text);
+            if (currentConversationId) formData.append("conversation_id", currentConversationId);
+            if (selectedFile) formData.append("file", selectedFile);
+
+            document.getElementById('chatInput').value = '';
+            removeSelectedFile();
+            document.getElementById('typingIndicator').style.display = 'flex';
+
+            try {
+                const res = await fetch('/chat', { method: 'POST', body: formData });
+                const data = await res.json();
+                document.getElementById('typingIndicator').style.display = 'none';
+                appendMessage('bot', data.reply);
+                if (data.conversation_id) currentConversationId = data.conversation_id;
+                loadConversations();
+            } catch (err) {
+                document.getElementById('typingIndicator').style.display = 'none';
+                appendMessage('bot', "Sorry, something went wrong.");
             }
         }
 
-        // Load conversations when page loads
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        document.getElementById('newChatBtn').addEventListener('click', () => {
+            document.getElementById('chatView').innerHTML = '';
+            document.getElementById('welcomeContainer').classList.remove('hidden');
+            currentConversationId = null;
+        });
+
         window.onload = loadConversations;
     </script>
 </body>

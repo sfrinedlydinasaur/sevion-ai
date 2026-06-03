@@ -24,10 +24,8 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey123")
 
-# Fixed database path for Render
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///sevion.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
 app.config["UPLOAD_FOLDER"] = "uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
@@ -37,19 +35,15 @@ client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"), base_url="https://api.groq.com/openai/v1"
 )
 
-# ====================== SYSTEM PROMPT ======================
 system_prompt = """
 You are Sevion, a disciplined, intelligent, and helpful AI assistant.
-
 Capabilities:
 - You can read and analyze uploaded files (PDF, TXT, CSV)
-- You can see and understand uploaded images (when user uploads them)
-
+- You can see and understand uploaded images
 Be honest about your limits. Only use uploaded content when the user provides it.
 """
 
 
-# ====================== MODELS ======================
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -77,7 +71,7 @@ def get_conversation_title(messages):
     return "New Conversation"
 
 
-# ====================== ROUTES ======================
+# ==================== AUTH ROUTES ====================
 
 
 @app.route("/")
@@ -127,7 +121,79 @@ def chat_page():
     return render_template("index.html", current_user=user)
 
 
-# ====================== CHAT + FILE/IMAGE HANDLING ======================
+# ==================== CONVERSATION ROUTES ====================
+
+
+@app.route("/conversations", methods=["GET"])
+def get_conversations():
+    if "user_id" not in session:
+        return jsonify([]), 401
+
+    user_id = session["user_id"]
+    convs = (
+        Conversation.query.filter_by(user_id=user_id)
+        .order_by(Conversation.last_updated.desc())
+        .all()
+    )
+
+    result = []
+    for conv in convs:
+        result.append(
+            {
+                "id": conv.id,
+                "title": conv.title,
+                "last_updated": conv.last_updated.isoformat()
+                if conv.last_updated
+                else "",
+            }
+        )
+
+    return jsonify(result)
+
+
+@app.route("/conversation/<conv_id>", methods=["GET", "DELETE"])
+def conversation_detail(conv_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    user_id = session["user_id"]
+    conv = Conversation.query.filter_by(id=conv_id, user_id=user_id).first()
+
+    if not conv:
+        return jsonify({"error": "Conversation not found"}), 404
+
+    if request.method == "DELETE":
+        db.session.delete(conv)
+        db.session.commit()
+        return jsonify({"success": True})
+
+    # GET - return messages
+    messages = json.loads(conv.messages) if conv.messages else []
+    return jsonify({"messages": messages, "title": conv.title})
+
+
+@app.route("/conversation/<conv_id>/rename", methods=["PUT"])
+def rename_conversation(conv_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    user_id = session["user_id"]
+    data = request.get_json()
+    new_title = data.get("title", "").strip()
+
+    if not new_title:
+        return jsonify({"error": "Title is required"}), 400
+
+    conv = Conversation.query.filter_by(id=conv_id, user_id=user_id).first()
+    if not conv:
+        return jsonify({"error": "Conversation not found"}), 404
+
+    conv.title = new_title
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+# ==================== MAIN CHAT ROUTE ====================
 
 
 @app.route("/chat", methods=["POST"])
@@ -147,7 +213,6 @@ def chat():
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         uploaded_file.save(filepath)
 
-        # IMAGE VISION
         if filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
             with open(filepath, "rb") as image_file:
                 base64_image = base64.b64encode(image_file.read()).decode("utf-8")
@@ -178,7 +243,11 @@ def chat():
 
             if not conv_id:
                 conv_id = str(uuid.uuid4())
-                db.session.add(Conversation(id=conv_id, user_id=user_id))
+                new_conv = Conversation(
+                    id=conv_id, user_id=user_id, title="New Conversation"
+                )
+                db.session.add(new_conv)
+                db.session.commit()
 
             conv = Conversation.query.get(conv_id)
             messages = json.loads(conv.messages) if conv.messages else []
@@ -192,7 +261,6 @@ def chat():
 
             return jsonify({"reply": ai_reply, "conversation_id": conv_id})
 
-        # FILE TEXT EXTRACTION
         else:
             file_text = ""
             if filename.lower().endswith((".txt", ".csv")):
@@ -206,11 +274,9 @@ def chat():
                         for page in PyPDF2.PdfReader(f).pages:
                             file_text += page.extract_text() or ""
                 except:
-                    file_text = "[Could not read PDF file]"
+                    file_text = "[Could not read PDF]"
             else:
-                file_text = (
-                    "[Unsupported file type. Only PDF, TXT, and CSV are supported.]"
-                )
+                file_text = "[Unsupported file type]"
 
             file_content = (
                 f"\n\n[File Content - {filename}]\n{file_text}\n[End of File]"
@@ -223,9 +289,14 @@ def chat():
 
     if not conv_id:
         conv_id = str(uuid.uuid4())
-        db.session.add(Conversation(id=conv_id, user_id=user_id))
+        new_conv = Conversation(id=conv_id, user_id=user_id, title="New Conversation")
+        db.session.add(new_conv)
+        db.session.commit()
 
     conv = Conversation.query.get(conv_id)
+    if not conv:
+        return jsonify({"error": "Conversation not found"}), 404
+
     messages = json.loads(conv.messages) if conv.messages else []
 
     if len(messages) == 0:
@@ -247,7 +318,7 @@ def chat():
             return jsonify(
                 {
                     "error": "token_limit",
-                    "message": "This conversation is too long. Please start a new chat.",
+                    "message": "Conversation too long. Start a new chat.",
                 }
             ), 400
         return jsonify(
@@ -257,6 +328,10 @@ def chat():
     messages.append({"role": "assistant", "content": ai_reply})
     conv.messages = json.dumps(messages)
     conv.last_updated = datetime.utcnow()
+
+    if conv.title == "New Conversation" and len(messages) >= 3:
+        conv.title = get_conversation_title(messages)
+
     db.session.commit()
 
     return jsonify({"reply": ai_reply, "conversation_id": conv_id, "title": conv.title})
