@@ -183,7 +183,10 @@
         const expandBtn = document.getElementById('expandBtn');
 
         mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.remove('-translate-x-full');
+            mobileMenuBtn.classList.toggle('hidden');
+        
         });
 
         collapseBtn.addEventListener('click', () => {
