@@ -185,8 +185,8 @@
         mobileMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             sidebar.classList.remove('sidebar-collapsed');
-            sidebar.classList.toggle('-translate-x-full'); 
-            mobileMenuBtn.classList.toggle('hidden');   
+            sidebar.classList.remove('-translate-x-full'); 
+            mobileMenuBtn.classList.add('hidden');   
          });
             collapseBtn.addEventListener('click', () => {
          if (window.innerWidth <= 768) {
