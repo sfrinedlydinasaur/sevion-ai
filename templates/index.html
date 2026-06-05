@@ -18,6 +18,37 @@
                         radial-gradient(circle at 50% 50%, #00f0ff 0%, #0044ff 60%, #020617 100%);
             box-shadow: 0 0 20px rgba(0,240,255,0.4), inset -5px -5px 15px rgba(0,136,255,0.7), inset 5px 5px 10px rgba(255,255,255,0.4);
         }
+        .sidebar-collapsed { 
+            width: 80px !important;
+            padding: 12px 8px; !important;
+            align-items: center;
+        }
+        .sidebar-collapsed .hide-on-collapse {
+            display: none;
+        }
+        .sidebar-collapsed #newChatBtn {
+            padding:12px;
+            justify-content: center;
+            width: 45px;
+        }
+        .sidebar-collapsed {
+            width: 60px !important;
+            padding: 15px 12px !important;
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-collapsed .flex.items-center.justify-between {
+            justify-content: center;
+        }
+        .sidebar-collapsed #expandBtn {
+            display: flex !important;
+            position: static 
+        }
+        .sidebar-collapsed #collapseBtn {
+            display: none;
+        }
+
     </style>
 </head>
 <body class="h-full text-slate-200 overflow-hidden flex">
@@ -31,13 +62,13 @@
     <aside id="sidebar" class="w-72 bg-[#060c1d] border-r border-cyan-500/10 flex flex-col p-5 z-40 shrink-0 fixed md:relative h-full -translate-x-full md:translate-x-0 transition-all duration-300">
         <div class="flex items-center justify-between h-12 mb-8">
             <div class="flex items-center gap-3">
-                <div class="frozen-3d-ball"></div>
+                <div class="frozen-3d-ball hide-on-collapse"></div>
                 <span class="text-2xl font-bold hide-on-collapse">Sevion</span>
             </div>
             <button id="collapseBtn" class="p-2 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5 transition-all hide-on-collapse">
                 <i data-lucide="chevrons-left" class="w-4 h-4"></i>
             </button>
-            <button id="expandBtn" class="hidden p-2 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5 transition-all">
+            <button id="expandBtn" class="hidden p-2 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5 transition-all absolute right-[16px] absolute top-2 right-2">
                 <i data-lucide="chevrons-right" class="w-4 h-4"></i>
             </button>
         </div>
@@ -61,7 +92,7 @@
                     <p class="text-[10px] text-slate-500">Free Plan</p>
                 </div>
             </div>
-            <a href="/logout" class="text-slate-500 hover:text-red-400">
+            <a href="/logout" class="text-slate-500 hover:text-red-400 hide-on-collapse">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
             </a>
         </div>
