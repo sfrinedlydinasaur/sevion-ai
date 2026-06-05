@@ -183,13 +183,11 @@
         const expandBtn = document.getElementById('expandBtn');
 
         mobileMenuBtn.addEventListener('click', (e) => {
-            sidebar.classList.toggle('sidebar-collapsed');
-            sidebar.classList.remove('-translate-x-full');
-            mobileMenuBtn.classList.toggle('hidden');
-        
-        });
-
-        collapseBtn.addEventListener('click', () => {
+            e.stopPropagation();
+            sidebar.classList.remove('sidebar-collapsed');
+            sidebar.classList.toggle('-translate-x-full');    
+         });
+            collapseBtn.addEventListener('click', () => {
          if (window.innerWidth <= 768) {
             sidebar.classList.add('_translate-x-full');
             mobileMenuBtn.classList.remove('hidden');
