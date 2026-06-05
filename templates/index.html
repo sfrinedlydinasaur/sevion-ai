@@ -182,7 +182,7 @@
         const collapseBtn = document.getElementById('collapseBtn');
         const expandBtn = document.getElementById('expandBtn');
 
-        mobileMenuBtn.addEventListener('click', () => {
+        mobileMenuBtn.addEventListener('click', (e) => {
             sidebar.classList.toggle('sidebar-collapsed');
             sidebar.classList.remove('-translate-x-full');
             mobileMenuBtn.classList.toggle('hidden');
