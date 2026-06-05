@@ -185,7 +185,8 @@
         mobileMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             sidebar.classList.remove('sidebar-collapsed');
-            sidebar.classList.toggle('-translate-x-full');    
+            sidebar.classList.toggle('-translate-x-full'); 
+            mobileMenuBtn.classList.toggle('hidden');   
          });
             collapseBtn.addEventListener('click', () => {
          if (window.innerWidth <= 768) {
@@ -196,9 +197,6 @@
              collapseBtn.classList.add('hidden');
              expandBtn.classList.remove('hidden');
          }
-            sidebar.classList.add('sidebar-collapsed');
-            collapseBtn.classList.add('hidden');
-            expandBtn.classList.remove('hidden');
         });
 
         expandBtn.addEventListener('click', () => {
